@@ -89,7 +89,46 @@ function boot() {
   function stageCount(tid) { const r=record(tid); return stages.filter(s=>r.stages[s[0]]).length; }
   function dueReviews() { return db.reviews.filter(r=>!r.done).sort((a,b)=>a.due.localeCompare(b.due)); }
   function openErrors() { return db.errors.filter(e=>!e.resolved); }
+  function seedCurrentWeekPlan() {
+    if(db.planSeed==="enem-2026-11-02") return;
+    const subjectFor = pattern => subjects.find(s=>pattern.test(s.name));
+    const topicFor = (s, pattern) => s ? flat(s).find(t=>pattern.test(t.title+" "+t.parent)) : null;
+    const blocks = [
+      [0,/portugu/i,/sintaxe|estrutura da ora|análise sintática/i,"Teoria ativa","Reconstruir a estrutura da oração: identificar verbo, sujeito e termos ligados ao verbo; não avançar para regência sem essa base."],
+      [0,/redação/i,/estrutura|argumentação|dissertativo/i,"Produção orientada","Planejar tese, dois argumentos e proposta de intervenção; escrever um desenvolvimento e revisar a relação entre tese e argumento."],
+      [0,/filosofia/i,/conceito|ética|conhecimento|filosof/i,"Questões e correção","Retomar os conceitos filosóficos que apareceram como lacuna no diagnóstico; justificar por que os distratores estão errados."],
+      [1,/matem/i,/fraç/i,"Teoria ativa","Frações como números: equivalência, comparação, representação e operações. Verificar pré-requisitos antes de avançar."],
+      [1,/quím/i,/estrutura atômica|átomo|eletrosfera/i,"Teoria ativa","Estrutura atômica: número atômico, número de massa, prótons, nêutrons, elétrons e formação de íons."],
+      [1,/sociolog/i,/conceito|cultura|sociedade|sociolog/i,"Diagnóstico","Diagnóstico conceitual de Sociologia com texto-base e questões; registrar o que é desconhecido sem antecipar conteúdo."],
+      [2,/físic/i,/cinemática|velocidade|posição|deslocamento/i,"Teoria ativa","Cinemática: referencial, posição, trajetória, deslocamento e velocidade; interpretar a situação antes de usar fórmulas."],
+      [2,/matem/i,/fraç/i,"Exercícios","Resolver problemas com frações e registrar cada erro E1–E6; avançar apenas se a operação estiver segura."],
+      [2,/artes/i,/arte|linguagem|movimento|artes/i,"Diagnóstico","Diagnóstico de Artes por leitura de imagens, contexto e linguagem artística; registrar conceitos ainda não reconhecidos."],
+      [3,/portugu/i,/sintaxe|oração|verbo|termos/i,"Exercícios","Analisar orações em questões contextualizadas; distinguir função sintática de classe gramatical e justificar alternativas."],
+      [3,/geograf/i,/cartograf|escala|coordenada|mapa/i,"Correção","Cartografia: escala, coordenadas e leitura de mapas. Foco nas lacunas localizadas, sem reconstruir toda a disciplina."],
+      [3,/biolog/i,/meiose|genética|gameta|alelo/i,"Correção","Retomar a cadeia meiose → gametas → alelos → genótipo/fenótipo; resolver cruzamentos simples e explicar o raciocínio."],
+      [4,/histór/i,/história|brasil|mundo/i,"Manutenção","Questões interpretativas de História com foco em causalidade, comparação e análise de fontes; não refazer a matéria do zero."],
+      [4,/quím/i,/estrutura atômica|átomo|íons|isótopos/i,"Exercícios","Questões de estrutura atômica, íons e isótopos; separar erros conceituais de erros de atenção/cálculo."],
+      [4,/filosofia|sociolog|artes/i,/./,"Revisão e diagnóstico","Revisar os registros diagnósticos da semana e consolidar conceitos frágeis; fazer uma bateria curta de Linguagens/Humanas e analisar os distratores."]
+    ];
+    const now = new Date();
+    const monday = new Date(2026,10,2,12);
+    if(now > new Date(2026,10,8,23,59)) return;
+    const seen = new Set(db.plans.map(p=>p.id));
+    blocks.forEach((b,i)=>{
+      const s=subjectFor(b[1]);
+      if(!s) return;
+      const t=topicFor(s,b[2]);
+      const pid="enem-2026-11-02-"+i;
+      if(seen.has(pid)) return;
+      db.plans.push({id:pid,day:String(b[0]),duration:40,subjectId:s.id,subjectName:s.name,topicId:t?t.id:"",topicTitle:t?t.title:(b[1].source||s.name),kind:b[3],why:b[4],source:"official-week",weekStart:"2026-11-02",weekEnd:"2026-11-08"});
+    });
+    db.planSeed="enem-2026-11-02";
+    db.settings.weeklyHours=10;
+    db.settings.dailyMinutes=120;
+    save();
+  }
   migrateLegacy();
+  seedCurrentWeekPlan();
   function nav() {
     const n=document.querySelector(".navigation");
     if(!n || document.getElementById("learningWorkspace")) return;
@@ -297,12 +336,14 @@ function boot() {
   function renderPlanner() {
     view="planner";const days=["Segunda","Terça","Quarta","Quinta","Sexta","Sábado","Domingo"],tasks=suggestedTasks();
     const total=db.plans.reduce((a,p)=>a+(+p.duration||0),0);
-    let body='<div class="lx-panel"><div class="lx-panel-head"><div><h2>Parâmetros editáveis</h2><p>O plano é uma proposta. Ajuste a carga e os blocos conforme sua semana real.</p></div></div><div class="lx-form-grid"><label>Meta semanal (horas)<input id="lxWeeklyHours" type="number" min="1" max="60" value="'+db.settings.weeklyHours+'"></label><label>Limite diário (minutos)<input id="lxDailyMinutes" type="number" min="15" max="360" value="'+db.settings.dailyMinutes+'"></label></div><p class="lx-muted">'+Math.floor(total/60)+'h '+total%60+'min planejados.</p><button class="button button-secondary" data-lx="save-plan-settings">Salvar parâmetros</button> <button class="button button-primary" data-lx="generate-plan">Gerar sugestões semanais</button> <button class="button button-secondary" data-lx="new-plan-manual">＋ Bloco manual</button></div>';
-    body+='<div class="lx-plan-grid">'+days.map((d,i)=>{const items=db.plans.filter(p=>p.day===String(i));return '<section class="lx-plan-day"><h3>'+d+'</h3>'+ (items.length?items.map(p=>'<article><small>'+p.duration+' min · '+esc(p.kind)+'</small><b>'+esc(p.subjectName)+' · '+esc(p.topicTitle||"Estudo geral")+'</b><p>'+esc(p.why||"Bloco adicionado manualmente.")+'</p><button data-remove-plan="'+p.id+'">Remover / ignorar</button></article>').join(""):'<p class="lx-muted">Sem bloco planejado.</p>')+'</section>';}).join("")+'</div>';
-    body+='<div class="lx-panel"><h2>Por que estas tarefas foram priorizadas?</h2><p class="lx-muted">A ordem combina revisões vencidas, erros ainda não superados e prioridades curriculares. O sistema explica o motivo; você decide o que entra na semana.</p><div class="lx-records">'+tasks.slice(0,10).map(t=>'<article><div><b>'+esc(t.title)+'</b><small>'+esc(t.subjectName)+' · '+esc(t.why)+'</small></div></article>').join("")+'</div></div>';
-    shell("PLANEJAMENTO","Plano semanal assistido","Sugestões editáveis: adicionar, remover ou ignorar. O algoritmo não substitui sua decisão.",body);
+    const activeWeek=db.plans.find(p=>p.weekStart),weekLabel=activeWeek?"2–8 de novembro de 2026":"Semana configurada";
+    let body='<div class="lx-panel"><div class="lx-panel-head"><div><h2>Plano operacional · '+weekLabel+'</h2><p>Base de 10 horas semanais. Três blocos de 40 minutos por dia útil; o intervalo restante fica fora da contagem de estudo.</p></div></div><div class="lx-form-grid"><label>Meta semanal (horas)<input id="lxWeeklyHours" type="number" min="1" max="60" value="'+db.settings.weeklyHours+'"></label><label>Limite diário (minutos)<input id="lxDailyMinutes" type="number" min="15" max="360" value="'+db.settings.dailyMinutes+'"></label></div><p class="lx-muted">'+Math.floor(total/60)+'h '+total%60+'min planejados. Os blocos desta semana foram montados a partir das lacunas documentadas; você pode editar, remover ou acrescentar tarefas.</p><button class="button button-secondary" data-lx="save-plan-settings">Salvar parâmetros</button> <button class="button button-secondary" data-lx="new-plan-manual">＋ Bloco manual</button></div>';
+    body+='<div class="lx-plan-grid">'+days.map((d,i)=>{const items=db.plans.filter(p=>p.day===String(i));return '<section class="lx-plan-day"><h3>'+d+'</h3>'+ (items.length?items.map(p=>'<article><small>'+p.duration+' min · '+esc(p.kind)+'</small><b>'+esc(p.subjectName)+' · '+esc(p.topicTitle||"Estudo geral")+'</b><p>'+esc(p.why||"Bloco do plano semanal")+'</p><button data-remove-plan="'+p.id+'">Remover / ignorar</button></article>').join(""):'<p class="lx-muted">Sem bloco planejado. Sábado é reserva para recuperar pendências, não carga obrigatória.</p>')+'</section>';}).join("")+'</div>';
+    body+='<div class="lx-panel"><h2>Critério de prioridade</h2><p class="lx-muted">Matemática, Química e Física recebem reconstrução de pré-requisitos; Português e Redação recebem trabalho estrutural; Biologia e Geografia recebem correção localizada. História fica em manutenção. Filosofia, Sociologia e Artes recebem diagnóstico ou correção conforme os registros mais recentes. O plano não declara domínio: o resultado das questões decide a próxima etapa.</p></div>';
+    body+='<div class="lx-panel"><h2>Outras tarefas sugeridas pelo sistema</h2><p class="lx-muted">Estas sugestões usam revisões vencidas, erros em aberto e prioridade curricular. Elas não são adicionadas automaticamente à semana.</p><div class="lx-records">'+(tasks.length?tasks.slice(0,8).map(t=>'<article><div><b>'+esc(t.title)+'</b><small>'+esc(t.subjectName)+' · '+esc(t.why)+'</small></div></article>').join(""):'<p class="lx-muted">As sugestões aparecerão quando houver registros suficientes de sessões, erros ou revisões.</p>')+'</div></div>';
+    shell("PLANEJAMENTO","Plano semanal assistido","Plano inicial preenchido com base nos diagnósticos disponíveis. Ajuste a execução e registre os resultados para recalcular as próximas semanas.",body);
   }
-  function exportBackup() {
+    function exportBackup() {
     const blob=new Blob([JSON.stringify({app:"Central de Estudos 2.0",version:1,exportedAt:new Date().toISOString(),data:db,legacy:(function(){try{return JSON.parse(localStorage.getItem("central-estudos-v3")||"null");}catch(e){return null;}})(),flexible:(function(){try{return JSON.parse(localStorage.getItem("central-estudos-flex-v1")||"null");}catch(e){return null;}})()},null,2)],{type:"application/json"});
     const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="central-estudos-2-backup-"+today()+".json";a.click();URL.revokeObjectURL(url);toast("Backup da Central 2.0 exportado.");
   }

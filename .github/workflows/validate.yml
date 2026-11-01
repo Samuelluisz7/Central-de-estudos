@@ -1,0 +1,35 @@
+name: Validate Central de Estudos
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check app.js
+          node --check catalog.js
+
+      - name: Validate study catalog
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const zlib = require('node:zlib');
+          const source = fs.readFileSync('catalog.js', 'utf8');
+          const match = source.match(/const encoded = "([^"]+)"/);
+          if (!match) throw new Error('Compressed catalog payload not found.');
+          const catalog = JSON.parse(zlib.gunzipSync(Buffer.from(match[1], 'base64')).toString('utf8'));
+          const total = catalog.reduce((sum, subject) => sum + subject[8], 0);
+          const essay = catalog.find(subject => subject[0] === 'redacao');
+          if (total !== 1064) throw new Error('Expected 1064 topics, found ' + total);
+          if (!essay || essay[8] !== 13) throw new Error('Essay path must contain 13 mapped stages.');
+          console.log('Validated ' + catalog.length + ' subjects and ' + total + ' topics/subtopics.');
+          NODE

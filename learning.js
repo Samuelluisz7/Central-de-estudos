@@ -224,11 +224,11 @@ function boot() {
   function render(v) {
     if(v==="home")renderHome();else if(v==="map")renderMap();else if(v==="sessions")renderSessions();else if(v==="errors")renderErrors();else if(v==="reviews")renderReviews();else if(v==="history")renderHistory();else if(v==="settings")renderSettings();
   }
-  root.addEventListener("change",e=>{
+  document.addEventListener("change",e=>{
     const c=e.target.closest("[data-stage]");if(c){const r=record(c.dataset.topic);r.stages[c.dataset.stage]=c.checked;r.updatedAt=new Date().toISOString();save();if(view==="map")renderMap();else if(activeTopic)topicDetail(activeTopic);}
     const m=e.target.closest("[data-master]");if(m){const r=record(m.dataset.master);r.mastered=m.checked;r.updatedAt=new Date().toISOString();save();toast(m.checked?"Conteúdo marcado como dominado.":"Marcação de domínio removida.");}
   });
-  root.addEventListener("click",e=>{
+  document.addEventListener("click",e=>{
     const d=e.target.closest("[data-topic-detail]");if(d){topicDetail(d.dataset.topicDetail);return;}
     const l=e.target.closest("[data-lx]");if(l){const a=l.dataset.lx;
       if(a==="new-session")sessionForm(activeSubject,activeTopic);

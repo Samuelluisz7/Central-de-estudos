@@ -108,10 +108,9 @@ function boot() {
       [3,/biolog/i,/meiose|genética|gameta|alelo/i,"Correção","Retomar a cadeia meiose → gametas → alelos → genótipo/fenótipo; resolver cruzamentos simples e explicar o raciocínio."],
       [4,/histór/i,/história|brasil|mundo/i,"Manutenção","Questões interpretativas de História com foco em causalidade, comparação e análise de fontes; não refazer a matéria do zero."],
       [4,/quím/i,/estrutura atômica|átomo|íons|isótopos/i,"Exercícios","Questões de estrutura atômica, íons e isótopos; separar erros conceituais de erros de atenção/cálculo."],
-      [4,/filosofia|sociolog|artes/i,/./,"Revisão e diagnóstico","Revisar os registros diagnósticos da semana e consolidar conceitos frágeis; fazer uma bateria curta de Linguagens/Humanas e analisar os distratores."]
+      [4,/portugu/i,/^$^/,"Mini-simulado e análise","Bateria curta de Linguagens e Humanas, seguida de análise dos distratores e classificação dos erros E1–E6."]
     ];
     const now = new Date();
-    const monday = new Date(2026,10,2,12);
     if(now > new Date(2026,10,8,23,59)) return;
     const seen = new Set(db.plans.map(p=>p.id));
     blocks.forEach((b,i)=>{
@@ -120,7 +119,7 @@ function boot() {
       const t=topicFor(s,b[2]);
       const pid="enem-2026-11-02-"+i;
       if(seen.has(pid)) return;
-      db.plans.push({id:pid,day:String(b[0]),duration:40,subjectId:s.id,subjectName:s.name,topicId:t?t.id:"",topicTitle:t?t.title:(b[1].source||s.name),kind:b[3],why:b[4],source:"official-week",weekStart:"2026-11-02",weekEnd:"2026-11-08"});
+      db.plans.push({id:pid,day:String(b[0]),duration:40,subjectId:s.id,subjectName:s.name,topicId:t?t.id:"",topicTitle:t?t.title:"Atividade orientada",kind:b[3],why:b[4],source:"official-week",weekStart:"2026-11-02",weekEnd:"2026-11-08"});
     });
     db.planSeed="enem-2026-11-02";
     db.settings.weeklyHours=10;

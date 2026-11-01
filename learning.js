@@ -180,6 +180,7 @@ function boot() {
     openModal("Resultado da revisão",html);
     document.getElementById("lxReviewForm").addEventListener("submit",e=>{e.preventDefault();const f=new FormData(e.currentTarget),v=String(f.get("result"));r.done=true;r.result=v;r.note=String(f.get("note")||"");r.completedAt=today();r.attempts=(r.attempts||0)+1;
       const next=v==="good"?14:v==="partial"?3:1;
+      if(r.topicId){const tr=record(r.topicId);tr.stages.review=v==="good";tr.updatedAt=new Date().toISOString();}
       db.reviews.push({id:id(),topicId:r.topicId,topicTitle:r.topicTitle,subjectId:r.subjectId,subjectName:r.subjectName,label:v==="good"?"Reforço +14d":v==="partial"?"Reforço +3d":"Reforço +1d",due:plusDays(today(),next),done:false,attempts:0});
       save();closeModal();render("reviews");toast("Revisão registrada. Próximo intervalo: "+next+" dia(s).");
     });
@@ -213,12 +214,12 @@ function boot() {
     document.getElementById("lxImport").addEventListener("change",e=>{if(e.target.files[0])importBackup(e.target.files[0]);});
   }
   function exportBackup() {
-    const blob=new Blob([JSON.stringify({app:"Central de Estudos 2.0",version:1,exportedAt:new Date().toISOString(),data:db},null,2)],{type:"application/json"});
+    const blob=new Blob([JSON.stringify({app:"Central de Estudos 2.0",version:1,exportedAt:new Date().toISOString(),data:db,legacy:(function(){try{return JSON.parse(localStorage.getItem("central-estudos-v3")||"null");}catch(e){return null;}})(),flexible:(function(){try{return JSON.parse(localStorage.getItem("central-estudos-flex-v1")||"null");}catch(e){return null;}})()},null,2)],{type:"application/json"});
     const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="central-estudos-2-backup-"+today()+".json";a.click();URL.revokeObjectURL(url);toast("Backup da Central 2.0 exportado.");
   }
   function importBackup(file) {
     const reader=new FileReader();reader.onload=()=>{try{const x=JSON.parse(reader.result),d=x.data||x;if(!d.topics||!Array.isArray(d.sessions)||!Array.isArray(d.errors)||!Array.isArray(d.reviews))throw Error("invalid");if(!confirm("Mesclar os registros do arquivo com os dados atuais? Registros com o mesmo ID serão preservados uma única vez."))return;
-      db.topics=Object.assign({},db.topics,d.topics);["sessions","errors","reviews","plans"].forEach(k=>{const map=new Map((db[k]||[]).map(v=>[v.id,v]));(d[k]||[]).forEach(v=>map.set(v.id,v));db[k]=Array.from(map.values());});save();render("home");toast("Backup mesclado sem substituir os registros atuais.");
+      db.topics=Object.assign({},db.topics,d.topics);["sessions","errors","reviews","plans"].forEach(k=>{const map=new Map((db[k]||[]).map(v=>[v.id,v]));(d[k]||[]).forEach(v=>map.set(v.id,v));db[k]=Array.from(map.values());});if(d.legacy)localStorage.setItem("central-estudos-v3",JSON.stringify(d.legacy));if(d.flexible)localStorage.setItem("central-estudos-flex-v1",JSON.stringify(d.flexible));save();render("home");toast("Backup mesclado sem substituir os registros atuais.");
     }catch(e){toast("Arquivo inválido ou incompatível.");}};reader.readAsText(file);
   }
   function render(v) {

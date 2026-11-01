@@ -10,3 +10,19 @@
 @media(max-width:1100px){.planner-week{grid-template-columns:repeat(4,minmax(0,1fr))}.principle-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:780px){.guide-hero,.two-col{grid-template-columns:1fr}.guide-hero{padding:18px}.guide-hero h2{font-size:21px}.cycle-flow{justify-content:flex-start}.prompt-grid,.example-grid{grid-template-columns:1fr}.planner-week{grid-template-columns:repeat(2,minmax(0,1fr))}.principle-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:480px){.prompt-preview{align-items:flex-start;flex-direction:column}.prompt-preview .button{width:100%}.planner-week{grid-template-columns:1fr 1fr}.custom-topic-row{grid-template-columns:minmax(0,1fr) 112px}.error-card-foot{flex-wrap:wrap}.principle-grid{grid-template-columns:1fr 1fr}}
+
+/* Complementary navigation controls; study data remains untouched */
+.nav-extra-controls{display:flex;align-items:center;gap:5px;margin-right:5px}
+.nav-extra-btn{width:31px;height:31px;display:grid;place-items:center;border:1px solid var(--border);border-radius:7px;background:var(--surface2);color:var(--text);font-size:17px;line-height:1}
+.nav-extra-btn:hover{border-color:var(--gold);color:var(--gold)}
+.nav-fav-btn{color:var(--gold)}
+.nav-favorites-panel{position:fixed;z-index:80;top:66px;right:18px;width:min(330px,calc(100vw - 28px));max-height:65vh;overflow:auto;padding:13px;border:1px solid var(--border);border-radius:12px;background:var(--surface);box-shadow:var(--shadow)}
+.nav-favorites-head{display:flex;align-items:center;justify-content:space-between;padding-bottom:9px;border-bottom:1px solid var(--border);font-size:13px}
+.nav-favorites-head button,.nav-fav-remove{border:0;background:transparent;color:var(--muted);font-size:19px}
+.nav-favorite-row{display:flex;align-items:center;gap:7px;padding:6px 0;border-bottom:1px solid rgba(49,68,92,.45)}
+.nav-favorite-row>button:first-child{flex:1;display:flex;align-items:center;gap:9px;padding:7px;border:0;border-radius:7px;background:transparent;color:var(--text);text-align:left;font-size:12px}
+.nav-favorite-row>button:first-child:hover{background:var(--surface2)}
+.nav-favorite-row>button:first-child span{color:var(--gold)}
+.nav-favorites-empty{color:var(--muted);font-size:11px}
+@media(max-width:780px){.nav-extra-controls{gap:3px;margin-right:0}.nav-extra-btn{width:27px;height:28px;font-size:15px}.topbar-right{gap:4px}.nav-favorites-panel{top:58px;right:10px}}
+@media(max-width:480px){.nav-extra-btn{width:24px;height:26px;font-size:13px}.nav-extra-controls{gap:2px}.global-search{width:34vw}}

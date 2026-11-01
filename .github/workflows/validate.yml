@@ -18,6 +18,7 @@ jobs:
           node --check app.js
           node --check catalog.js
           node --check advanced.js
+          node --check navigation.js
 
       - name: Validate study catalog
         run: |

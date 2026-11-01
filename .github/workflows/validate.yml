@@ -13,21 +13,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check app.js syntax
-        id: app_syntax
-        continue-on-error: true
-        run: node --check app.js > app-syntax.txt 2>&1
-
-      - name: Check catalog.js syntax
-        id: catalog_syntax
-        continue-on-error: true
-        run: node --check catalog.js > catalog-syntax.txt 2>&1
+      - name: Check JavaScript syntax
+        run: |
+          node --check app.js
+          node --check catalog.js
 
       - name: Validate study catalog
-        id: catalog_data
-        continue-on-error: true
         run: |
-          node <<'NODE' > catalog-validation.txt 2>&1
+          node <<'NODE'
           const fs = require('node:fs');
           const zlib = require('node:zlib');
           const source = fs.readFileSync('catalog.js', 'utf8');
@@ -40,23 +33,3 @@ jobs:
           if (!essay || essay[8] !== 13) throw new Error('Essay path must contain 13 mapped stages.');
           console.log('Validated ' + catalog.length + ' subjects and ' + total + ' topics/subtopics.');
           NODE
-
-      - name: Upload validation report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: central-validation-report
-          path: |
-            app-syntax.txt
-            catalog-syntax.txt
-            catalog-validation.txt
-          if-no-files-found: ignore
-
-      - name: Fail if any validation failed
-        if: steps.app_syntax.outcome != 'success' || steps.catalog_syntax.outcome != 'success' || steps.catalog_data.outcome != 'success'
-        run: |
-          echo "A validação falhou. Consulte o artefato central-validation-report."
-          cat app-syntax.txt || true
-          cat catalog-syntax.txt || true
-          cat catalog-validation.txt || true
-          exit 1

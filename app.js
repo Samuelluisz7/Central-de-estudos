@@ -38,8 +38,28 @@ function start() {
   root.innerHTML=html;setCrumb("Visão geral");}
   function renderSubjects(){currentView="subjects";var groups=["Todas","Matemática","Ciências da Natureza","Ciências Humanas","Linguagens"];var html=heading("MAPA CURRICULAR","Matérias e trilhas","O conteúdo já está organizado. Abra uma matéria e marque o estado de cada tópico conforme avançar.");html+='<div class="toolbar"><input id="subjectSearch" class="search-input" type="search" placeholder="Filtrar matéria ou tópico..."><select id="areaFilter" class="filter-select">'+groups.map(function(x){return '<option>'+x+'</option>';}).join("")+'</select></div><div id="subjectGrid" class="subject-grid">'+SUBJECTS.map(subjectCard).join("")+'</div>';root.innerHTML=html;document.getElementById("subjectSearch").addEventListener("input",filterSubjects);document.getElementById("areaFilter").addEventListener("change",filterSubjects);setCrumb("Matérias e trilhas");}
   function filterSubjects(){var q=document.getElementById("subjectSearch").value.toLocaleLowerCase("pt-BR"),area=document.getElementById("areaFilter").value;var list=SUBJECTS.filter(function(s){return (area==="Todas"||s.area===area)&&(s.name.toLocaleLowerCase("pt-BR").includes(q)||s.focus.toLocaleLowerCase("pt-BR").includes(q)||flat(s).some(function(t){return t.title.toLocaleLowerCase("pt-BR").includes(q);}));});document.getElementById("subjectGrid").innerHTML=list.map(subjectCard).join("")||'<div class="empty-state">Nenhuma matéria encontrada.</div>';}
-  function renderSubject(id){var s=byId(id);if(!s)return renderSubjects();currentView="subject";currentSubject=id;var c=counts(s),next=firstOpen(s);var html=heading(s.area.toUpperCase(),s.name,s.focus,"<button class='button button-primary' data-action='session' data-subject='"+s.id+"'>＋ Registrar estudo</button>");html+='<section class="subject-summary"><div><span class="eyebrow">AVANÇO DA TRILHA</span><h2 id="subjectDoneCount">'+c.mastered+' de '+c.total+' tópicos dominados</h2><p>'+esc(s.priorityLabel)+' · <span id="subjectPercent">'+c.percent+'</span>% concluído</p><div id="subjectProgressBar" class="progress-track"><span style="width:'+c.percent+'%"></span></div>+'</div><div class="summary-next"><small>PRÓXIMO TÓPICO</small><strong id="subjectNext">'+esc(next?next.title:"Trilha concluída")+'</strong>'+(next?'<button class="button button-primary" data-advance="'+s.id+'">Continuar por aqui →</button>':'<span class="completed-label">Todos os tópicos dominados</span>')+'</div></section>';
-  html+='<div class="section-heading section-gap"><div><h2>Conteúdo completo</h2><p>Abra as unidades. Atualize o status de cada tópico; o progresso é calculado automaticamente.</p></div><span class="muted small">'+c.total+' tópicos</span></div><div class="unit-list">'+s.groups.map(function(g,i){return groupMarkup(s,g,i);}).join("")+'</div><button class="text-button back-button" data-view="subjects">← Voltar para todas as matérias</button>';root.innerHTML=html;setCrumb(s.name);}
+  function renderSubject(id){
+    var s=byId(id);
+    if(!s)return renderSubjects();
+    currentView="subject";
+    currentSubject=id;
+    var c=counts(s),next=firstOpen(s);
+    var html=heading(s.area.toUpperCase(),s.name,s.focus,"<button class='button button-primary' data-action='session' data-subject='"+s.id+"'>＋ Registrar estudo</button>");
+    html+='<section class="subject-summary">';
+    html+='<div><span class="eyebrow">AVANÇO DA TRILHA</span>';
+    html+='<h2 id="subjectDoneCount">'+c.mastered+' de '+c.total+' tópicos dominados</h2>';
+    html+='<p>'+esc(s.priorityLabel)+' · <span id="subjectPercent">'+c.percent+'</span>% concluído</p>';
+    html+='<div id="subjectProgressBar" class="progress-track"><span style="width:'+c.percent+'%"></span></div></div>';
+    html+='<div class="summary-next"><small>PRÓXIMO TÓPICO</small>';
+    html+='<strong id="subjectNext">'+esc(next?next.title:"Trilha concluída")+'</strong>';
+    html+=next?'<button class="button button-primary" data-advance="'+s.id+'">Continuar por aqui →</button>':'<span class="completed-label">Todos os tópicos dominados</span>';
+    html+='</div></section>';
+    html+='<div class="section-heading section-gap"><div><h2>Conteúdo completo</h2><p>Abra as unidades. Atualize o status de cada tópico; o progresso é calculado automaticamente.</p></div><span class="muted small">'+c.total+' tópicos</span></div>';
+    html+='<div class="unit-list">'+s.groups.map(function(g,i){return groupMarkup(s,g,i);}).join("")+'</div>';
+    html+='<button class="text-button back-button" data-view="subjects">← Voltar para todas as matérias</button>';
+    root.innerHTML=html;
+    setCrumb(s.name);
+  }
   function renderWriting(){var s=byId("redacao"),c=counts(s),recent=state.essays.slice().reverse(),html=heading("ÁREA EXCLUSIVA","Redação ENEM","Planeje, escreva, receba uma avaliação por competência e reescreva com base nas evidências.");var last=recent[0],avg=recent.length?Math.round(recent.reduce(function(a,x){return a+(x.total||0);},0)/recent.length):0;
   html+='<div class="metric-grid"><article class="metric"><span>Etapas da trilha</span><strong id="writingTopicCount">'+c.mastered+'/'+c.total+'</strong><small><span id="writingTopicPercent">'+c.percent+'</span>% concluídas</small></article><article class="metric"><span>Redações registradas</span><strong>'+state.essays.length+'</strong><small>Histórico de produção</small></article><article class="metric"><span>Última pontuação</span><strong>'+(last&&last.total!=null?last.total:"—")+'</strong><small>'+(last?esc(last.theme):"Nenhuma redação corrigida")+'</small></article><article class="metric"><span>Média registrada</span><strong>'+(recent.length?avg:"—")+'</strong><small>Entre redações com nota completa</small></article></div>';
   html+='<section class="writing-banner writing-banner-large"><div><span class="eyebrow">SEQUÊNCIA DE PRODUÇÃO</span><h2>Planejar → escrever → corrigir → reescrever</h2><p>Não considere a redação concluída apenas porque terminou o texto. A reescrita é parte do processo.</p></div>'+'<div id="writingProgressBar" class="progress-track"><span style="width:'+c.percent+'%"></span></div></section>';

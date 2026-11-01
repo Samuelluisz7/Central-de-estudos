@@ -14,17 +14,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check app.js syntax
-        id: app-syntax
+        id: app_syntax
         continue-on-error: true
         run: node --check app.js > app-syntax.txt 2>&1
 
       - name: Check catalog.js syntax
-        id: catalog-syntax
+        id: catalog_syntax
         continue-on-error: true
         run: node --check catalog.js > catalog-syntax.txt 2>&1
 
       - name: Validate study catalog
-        id: catalog-data
+        id: catalog_data
         continue-on-error: true
         run: |
           node <<'NODE' > catalog-validation.txt 2>&1
@@ -53,7 +53,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Fail if any validation failed
-        if: steps.app-syntax.outcome != 'success' || steps.catalog-syntax.outcome != 'success' || steps.catalog-data.outcome != 'success'
+        if: steps.app_syntax.outcome != 'success' || steps.catalog_syntax.outcome != 'success' || steps.catalog_data.outcome != 'success'
         run: |
           echo "A validação falhou. Consulte o artefato central-validation-report."
           cat app-syntax.txt || true

@@ -26,3 +26,11 @@
 .nav-favorites-empty{color:var(--muted);font-size:11px}
 @media(max-width:780px){.nav-extra-controls{gap:3px;margin-right:0}.nav-extra-btn{width:27px;height:28px;font-size:15px}.topbar-right{gap:4px}.nav-favorites-panel{top:58px;right:10px}}
 @media(max-width:480px){.nav-extra-btn{width:24px;height:26px;font-size:13px}.nav-extra-controls{gap:2px}.global-search{width:34vw}}
+
+/* Registro simples de estudo */
+.topic-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.topic-copy{flex:1;min-width:150px}
+.topic-mark,.topic-time{border:1px solid var(--border,#d8dce5);border-radius:9px;padding:9px 12px;font:inherit;font-size:.86rem;font-weight:650;cursor:pointer;background:var(--surface,#fff);color:var(--text,#202532)}
+.topic-mark.is-done{background:#e8f5ec;border-color:#9ac9a7;color:#176534}
+.topic-time{background:var(--accent,#253b67);border-color:var(--accent,#253b67);color:#fff}
+@media(max-width:600px){.topic-row{gap:7px}.topic-mark,.topic-time{padding:9px 10px;flex:0 0 auto}}

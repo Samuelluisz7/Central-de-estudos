@@ -7,6 +7,7 @@ function boot(){
  const built=raw.map(a=>({id:a[0],name:a[1],area:a[2],priority:a[3],priorityLabel:a[4],focus:a[5],groups:a[7]||[]}));
  const seed={customSubjects:[],customTopics:[],topicProgress:{},difficulties:[],plans:[],notes:[],studyLog:[],settings:{target:"ENEM 2026",weeklyHours:10,dailyMinutes:120}};
  let db=load();
+ db.topicProgress=db.topicProgress||{};
  let view="guide";
  function load(){try{return Object.assign({},seed,JSON.parse(localStorage.getItem(key)||"{}"));}catch(e){return JSON.parse(JSON.stringify(seed));}}
  function save(){try{localStorage.setItem(key,JSON.stringify(db));return true;}catch(e){alert("Não foi possível salvar. Exporte seus dados ou libere espaço no navegador.");return false;}}
@@ -17,7 +18,7 @@ function boot(){
  function topics(s){return flat(s).concat(db.customTopics.filter(t=>t.subjectId===s.id));}
  function allTopics(){return allSubjects().flatMap(s=>topics(s).map(t=>({...t,subjectId:s.id,subjectName:s.name})));}
  function legacy(){try{return JSON.parse(localStorage.getItem("central-estudos-v3")||"{}");}catch(e){return {};}}
- function progress(t){return legacy().progress?.[t.id]||"not_started";}
+ function progress(t){return db.topicProgress?.[t.id]||legacy().progress?.[t.id]||"not_started";}
  function heading(k,t,p,actions=""){return '<div class="page-header"><div><div class="eyebrow">'+esc(k)+'</div><h1>'+esc(t)+'</h1><p>'+esc(p)+'</p></div><div class="header-actions">'+actions+'</div></div>';}
  function panel(t,p,body){return '<section class="panel flex-panel"><div class="section-heading"><div><h2>'+t+'</h2><p>'+p+'</p></div></div>'+body+'</section>';}
  function button(action,label,kind="secondary"){return '<button class="button button-'+kind+'" data-x="'+action+'">'+label+'</button>';}
